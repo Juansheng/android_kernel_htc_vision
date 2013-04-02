@@ -2834,11 +2834,13 @@ static void a3xx_start(struct adreno_device *adreno_dev)
 	adreno_regwrite(device, A3XX_RBBM_CLOCK_CTL,
 			A3XX_RBBM_CLOCK_CTL_DEFAULT);
 
+#ifdef CONFIG_OCMEM
 	/* Set the OCMEM base address for A330 */
 	if (adreno_is_a330(adreno_dev)) {
 		adreno_regwrite(device, A3XX_RB_GMEM_BASE_ADDR,
 			(unsigned int)(adreno_dev->ocmem_base >> 14));
 	}
+#endif
 
 	/* Turn on performance counters */
 	adreno_regwrite(device, A3XX_RBBM_PERFCTR_CTL, 0x01);
