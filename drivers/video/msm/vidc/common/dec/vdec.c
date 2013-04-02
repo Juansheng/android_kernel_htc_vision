@@ -20,6 +20,7 @@
 #include <linux/io.h>
 #include <linux/list.h>
 #include <linux/module.h>
+#include <linux/msm_ion.h>
 #include <linux/platform_device.h>
 #include <linux/sched.h>
 #include <linux/uaccess.h>
@@ -347,7 +348,7 @@ static void vid_dec_output_frame_done(struct video_client_ctx *client_ctx,
 		ion_flag = vidc_get_fd_info(client_ctx, BUFFER_TYPE_OUTPUT,
 				pmem_fd, kernel_vaddr, buffer_index,
 				&buff_handle);
-		if (ion_flag == CACHED) {
+		if (ion_flag == ION_FLAG_CACHED) {
 			msm_ion_do_cache_op(client_ctx->user_ion_client,
 					buff_handle,
 					(unsigned long *) kernel_vaddr,
@@ -866,7 +867,7 @@ static u32 vid_dec_set_h264_mv_buffers(struct video_client_ctx *client_ctx,
 		vcd_h264_mv_buffer->client_data = (void *) mapped_buffer;
 		vcd_h264_mv_buffer->dev_addr = (u8 *)mapped_buffer->iova[0];
 	} else {
-		client_ctx->h264_mv_ion_handle = ion_import_fd(
+		client_ctx->h264_mv_ion_handle = ion_import_dma_buf(
 					client_ctx->user_ion_client,
 					vcd_h264_mv_buffer->pmem_fd);
 		if (!client_ctx->h264_mv_ion_handle) {
@@ -910,7 +911,7 @@ static u32 vid_dec_set_h264_mv_buffers(struct video_client_ctx *client_ctx,
 					VIDEO_DOMAIN, VIDEO_MAIN_POOL,
 					SZ_4K, 0, (unsigned long *)&iova,
 					(unsigned long *)&buffer_size,
-					UNCACHED, 0);
+					0, 0);
 			if (rc) {
 				ERR("%s():get_ION_kernel physical addr fail\n",
 						 __func__);
@@ -1267,12 +1268,12 @@ static u32 vid_dec_decode_frame(struct video_client_ctx *client_ctx,
 						kernel_vaddr,
 						buffer_index,
 						&buff_handle);
-			if (ion_flag == CACHED) {
+			if (ion_flag == ION_FLAG_CACHED) {
 				msm_ion_do_cache_op(client_ctx->user_ion_client,
 				buff_handle,
 				(unsigned long *)kernel_vaddr,
 				(unsigned long) vcd_input_buffer.data_len,
-				ION_IOC_CLEAN_CACHES);
+				ION_IOC_INV_CACHES);
 			}
 		}
 		vcd_status = vcd_decode_frame(client_ctx->vcd_handle,
@@ -1757,7 +1758,7 @@ static long vid_dec_ioctl(struct file *file,
 			}
 			put_pmem_file(pmem_file);
 		} else {
-			client_ctx->seq_hdr_ion_handle = ion_import_fd(
+			client_ctx->seq_hdr_ion_handle = ion_import_dma_buf(
 				client_ctx->user_ion_client,
 				seq_header.pmem_fd);
 			if (!client_ctx->seq_hdr_ion_handle) {

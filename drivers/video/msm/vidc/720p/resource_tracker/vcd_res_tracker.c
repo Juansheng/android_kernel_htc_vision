@@ -755,7 +755,7 @@ u32 res_trk_get_mem_type(void)
 	u32 mem_type;
 
 	if (resource_context.vidc_platform_data->enable_ion)
-		mem_type = ION_HEAP(resource_context.memtype);
+		mem_type = 1;
 	else
 		mem_type = resource_context.memtype;
 
